@@ -15,7 +15,6 @@ import java.util.Arrays;
 import com.ctre.phoenix.sensors.WPI_Pigeon2;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 
 import edu.wpi.first.math.geometry.Translation2d;
@@ -29,7 +28,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
     public HolonomicDriveSignal driveSignal = new HolonomicDriveSignal(new Translation2d(), 0, false);
 
     public SwerveDriveOdometry swerveOdometry;
-    //public SwerveDrivePoseEstimator swerveOdometry;
     public SwerveModule[] swerveModules;
     public WPI_Pigeon2 gyroscope;
 
@@ -42,10 +40,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
     public double lastPigeonAngle;
 
     public DrivetrainSubsystem() {
+        // init and config gyroscope
         gyroscope = new WPI_Pigeon2(DriveConstants.pigeonID);
         gyroscope.configFactoryDefault();
         gyroscope.reset();
 
+        // init swerve modules
         swerveModules = new SwerveModule[] {
             new SwerveModule(0, DriveConstants.FrontLeft.constants),
             new SwerveModule(1, DriveConstants.FrontRight.constants),
@@ -58,30 +58,35 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
         swerveOdometry = new SwerveDriveOdometry(DriveConstants.swerveKinematics, gyroscope.getRotation2d(), getModulePositions());
 
+        // set drift correction PID
         driftCorrectionStat = new PIDController(0.04, 0.0, 0);
         driftCorrectionStat.enableContinuousInput(-180, 180);
         driftCorrectionRot = new PIDController(0.2, 0.0, 0);
         driftCorrectionRot.enableContinuousInput(-180, 180);
 
         lastPigeonAngle = gyroscope.getAngle();
-
-
     }
+
+    /**
+     * Scale input drive values according to max speed and angular velocity.
+     * @param translationalVelocity translational velocity 
+     * @param rotationalVelocity rotational velocity
+     */
     public void driveRelative(Translation2d translationalVelocity, double rotationalVelocity) {
         drive(translationalVelocity.times(DriveConstants.maxSpeed), rotationalVelocity*DriveConstants.maxAngularVelocity);
     }
 
+    // drive 
     public void drive(Translation2d translationalVelocity, double rotationalVelocity) {
         drive(translationalVelocity, rotationalVelocity, fieldOriented);
     }  
     
+    // sets drive signal with the translational and rotational velocities.
     public void drive(Translation2d translationalVelocity, double rotationalVelocity, boolean fieldOriented) {
-        double tx = translationalVelocity.getX();
-        double ty = translationalVelocity.getY();
-
-        driveSignal = new HolonomicDriveSignal(new Translation2d(tx, ty), rotationalVelocity, fieldOriented);
+        driveSignal = new HolonomicDriveSignal(translationalVelocity, rotationalVelocity, fieldOriented);
     } 
     
+    // drive correction code
     public SwerveModuleState[] driftCorrection(SwerveModuleState[] moduleStates) {
         ChassisSpeeds s = DriveConstants.swerveKinematics.toChassisSpeeds(moduleStates);
         if(Math.abs(s.vxMetersPerSecond) + Math.abs(s.vyMetersPerSecond) >= 0.1) {
@@ -127,7 +132,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
         return gyroscope;
     }
 
-
     public void updateModules(SwerveModuleState[] desiredStates) {
         desiredStates = driftCorrection(desiredStates);
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, DriveConstants.maxSpeed);
@@ -154,7 +158,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
         }
     }
 
-
     @Override
     public void periodic(){
         swerveOdometry.update(gyroscope.getRotation2d(), getModulePositions()); 
@@ -164,6 +167,4 @@ public class DrivetrainSubsystem extends SubsystemBase {
     public void toggleFieldOriented() {
         fieldOriented = !fieldOriented;
     }
-
-
 }
