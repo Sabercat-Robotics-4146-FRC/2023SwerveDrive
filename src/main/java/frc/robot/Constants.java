@@ -17,31 +17,23 @@ public final class Constants {
     public static final class DriveConstants {
         public static final int pigeonID = 20;
 
-
         public static final COTSFalconSwerveConstants chosenModule = 
             COTSFalconSwerveConstants.SDSMK4(COTSFalconSwerveConstants.driveGearRatios.SDSMK4_L2);
-
 
         public static final double trackWidth = Units.inchesToMeters(20.0); 
         public static final double wheelBase = Units.inchesToMeters(21.0); 
         public static final double wheelCircumference = chosenModule.wheelCircumference;
 
-
-         public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
+        public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
             new Translation2d(wheelBase / 2.0, trackWidth / 2.0),
             new Translation2d(wheelBase / 2.0, -trackWidth / 2.0),
             new Translation2d(-wheelBase / 2.0, trackWidth / 2.0),
             new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0));
 
-
         public static final double driveGearRatio = chosenModule.driveGearRatio;
         public static final double angleGearRatio = chosenModule.angleGearRatio;
 
-        
-
-
         public static final boolean canCoderInvert = chosenModule.canCoderInvert;
-
 
         public static final int angleContinuousCurrentLimit = 25;
         public static final int anglePeakCurrentLimit = 40;
@@ -53,10 +45,8 @@ public final class Constants {
         public static final double drivePeakCurrentDuration = 0.1;
         public static final boolean driveEnableCurrentLimit = true;
 
-
         public static final double openLoopRamp = 0.5;
         public static final double closedLoopRamp = 0.0;
-
 
         public static final double[] anglePIDF = 
             {chosenModule.angleKP,chosenModule.angleKI,chosenModule.angleKD,chosenModule.angleKF};
@@ -67,15 +57,11 @@ public final class Constants {
         public static final double[] driveSVA = 
             {(0.70067 / 12), (2.2741 / 12), (0.16779 / 12)};
 
-
-
         public static final double maxSpeed = 4.5; 
         public static final double maxAngularVelocity = 5.0; 
 
-
         public static final NeutralMode angleNeutralMode = NeutralMode.Coast;
         public static final NeutralMode driveNeutralMode = NeutralMode.Brake;
-
 
         public static final class FrontLeft {
             public static final int driveMotorID = 4;
@@ -118,24 +104,5 @@ public final class Constants {
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
-    }
-
-    public static final class AutoConstants { 
-        public static final double maxSpeed = 2;
-        public static final double maxAcceleration = 1;
-
-        public static final double maxAngularSpeed = Math.PI/2;
-        public static final double maxAngularAcceleration = Math.PI/4;
-    
-    
-        public static final TrapezoidProfile.Constraints rotationalConstraints =
-            new TrapezoidProfile.Constraints(maxAngularSpeed, maxAngularAcceleration);
-
-        public static final TrajectoryConfig trajectoryConfig =
-            new TrajectoryConfig(
-                Constants.AutoConstants.maxSpeed,
-                Constants.AutoConstants.maxAcceleration)
-                .setKinematics(DriveConstants.swerveKinematics);
-    
     }
 }
