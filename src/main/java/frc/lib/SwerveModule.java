@@ -4,13 +4,13 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import frc.lib.math.Conversions;
 import frc.lib.util.CTREModuleState;
 import frc.lib.util.SwerveModuleConstants;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.CANCoder;
 
@@ -19,6 +19,7 @@ import frc.robot.Constants.DriveConstants;;
 
 public class SwerveModule {
     public int moduleNumber;
+    public String moduleName;
     private Rotation2d angleOffset;
     private Rotation2d lastAngle;
 
@@ -26,13 +27,16 @@ public class SwerveModule {
     private TalonFX mDriveMotor;
     private CANCoder angleEncoder;
 
+    private boolean isInverted;
+
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(
         DriveConstants.driveSVA[0], DriveConstants.driveSVA[1], DriveConstants.driveSVA[2]);
 
-    public SwerveModule(int moduleNumber, SwerveModuleConstants moduleConstants){
+    public SwerveModule(String moduleName, int moduleNumber, SwerveModuleConstants moduleConstants){
         this.moduleNumber = moduleNumber;
+        this.moduleName = moduleName;
         this.angleOffset = moduleConstants.angleOffset;
-        
+        this.isInverted = moduleConstants.isInverted;        
 
         angleEncoder = new CANCoder(moduleConstants.cancoderID);
         configAngleEncoder();
@@ -47,7 +51,6 @@ public class SwerveModule {
 
         lastAngle = getState().angle;
 
-        Shuffleboard.getTab("Drivetrain").addNumber("ang" + moduleNumber + ":", ()->getAngle().getDegrees());
     }
 
     public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop){
@@ -55,7 +58,7 @@ public class SwerveModule {
         setAngle(desiredState);
         setSpeed(desiredState, isOpenLoop);
     }
-
+    
     private void setSpeed(SwerveModuleState desiredState, boolean isOpenLoop){
         if(isOpenLoop){
             double percentOutput = desiredState.speedMetersPerSecond / DriveConstants.maxSpeed;
@@ -103,9 +106,17 @@ public class SwerveModule {
     private void configDriveMotor(){        
         mDriveMotor.configFactoryDefault();
         mDriveMotor.configAllSettings(Robot.ctreConfigs.swerveDriveFXConfig);
-        mDriveMotor.setInverted(true);
+        mDriveMotor.setInverted(isInverted);
         mDriveMotor.setNeutralMode(DriveConstants.driveNeutralMode);
         mDriveMotor.setSelectedSensorPosition(0);
+    }
+
+    public void setBrakeMode() {
+        mDriveMotor.setNeutralMode(NeutralMode.Brake);
+    }
+
+    public void setCoastMode() {
+        mDriveMotor.setNeutralMode(NeutralMode.Coast);
     }
 
     public SwerveModuleState getState(){
